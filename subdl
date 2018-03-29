@@ -124,6 +124,17 @@ def writefile(filename, str):
     except Exception as e:
         raise SystemExit("Error writing to %s: %s" % (filename, e))
 
+def print_utf8(str):
+    string_in_bytes = str.encode('utf-8')
+    sys.stdout.buffer.write(string_in_bytes)
+    sys.stdout.buffer.write(b'\n')
+
+def print_error_utf8(str):
+    string_in_bytes = str.encode('utf-8')
+    sys.stderr.buffer.write(string_in_bytes)
+    sys.stderr.buffer.write(b'\n')
+
+
 def query_num(s, low, high):
     while True:
         try:
@@ -216,7 +227,7 @@ def SearchSubtitlesByFileName(filename, langs_search):
     file_name = file_base(os.path.basename(filename))
     searchlist = [({'sublanguageid': langs_search,
                     'query': file_name})]
-    print("Searching for subtitles for query=%s..." % (file_name), file=sys.stderr)
+    print_error_utf8("Searching for subtitles for query={}...".format(file_name))
     try:
         results = xmlrpc_server.SearchSubtitles(osdb_token, searchlist)
     except Exception as e:
@@ -259,15 +270,15 @@ def DisplaySubtitleSearchResults(search_results):
         # idmovieimdb = subtitle.IDMovieImdb
         if options.download == 'query':
             print("%s." % repr(n).rjust(count_maxlen), end=" ")
-        print("#%s [%s] [Rat:%s DL:%s] %s %s " % (idsubtitle.rjust(idsubtitle_maxlen),
-                                                lang,
-                                                rating.rjust(4),
-                                                downloads.rjust(downloads_maxlen),
-                                                moviename.ljust(moviename_maxlen),
-                                                filename))
+        print_utf8('#{} [{}] [Rat:{} DL:{}] {} {} '.format(idsubtitle.rjust(idsubtitle_maxlen),
+                                                          lang,
+                                                          rating.rjust(4),
+                                                          downloads.rjust(downloads_maxlen),
+                                                          moviename.ljust(moviename_maxlen),
+                                                          filename))
 
 def DisplaySelectedSubtitle(selected_file):
-    print("#{0.IDSubtitleFile} {0.SubFileName}".format(selected_file))
+    print_utf8("#{0.IDSubtitleFile} {0.SubFileName}".format(selected_file))
 
 def DownloadSubtitle(sub_id):
     '''Download subtitle #sub_id and return subtitle text as string.'''
@@ -281,21 +292,21 @@ def DownloadSubtitle(sub_id):
 def DownloadAndSaveSubtitle(sub_id, destfilename):
     if os.path.exists(destfilename):
         if options.existing == 'abort':
-            print("Subtitle %s already exists; aborting (try --interactive)." % destfilename)
+            print_utf8("Subtitle {} already exists; aborting (try --interactive).".format(destfilename))
             raise SystemExit(3)
         elif options.existing == 'bypass':
-            print("Subtitle %s already exists; bypassing." % destfilename)
+            print_utf8("Subtitle {} already exists; bypassing.".format(destfilename))
             return
         elif options.existing == 'overwrite':
-            print("Subtitle %s already exists; overwriting." % destfilename)
+            print_utf8("Subtitle {} already exists; overwriting.".format(destfilename))
         elif options.existing == 'query':
-            if query_yn("Subtitle %s already exists. Overwrite?" % destfilename):
+            if query_yn("Subtitle {} already exists. Overwrite?".format(destfilename)):
                 pass
             else:
                 raise SystemExit("File not overwritten.")
         else:
             raise Exception("internal error: bad option.existing=%s" % options.existing)
-    print("Downloading #%s to %s..." % (sub_id, destfilename), file=sys.stderr, end=" ")
+    print_error_utf8("Downloading #{} to {}... ".format(sub_id, destfilename))
     s = DownloadSubtitle(sub_id)
     if options.filter:
         s = filtersub(s)
